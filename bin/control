@@ -5,7 +5,6 @@ export STOPTIMEOUT=20
 
 HAPROXY_CART="kdehaproxy-1.4"
 export HAPROXY_PID="${OPENSHIFT_KDEHAPROXY_DIR}/run/haproxy.pid"
-export HAPROXY_CTLD_PID="${OPENSHIFT_KDEHAPROXY_DIR}/run/haproxy_ctld.pid"
 
 if ! [ $# -gt 0 ]
 then
@@ -83,7 +82,6 @@ function _start_haproxy_service() {
 }
 
 function _stop_haproxy_service() {
-    _stop_haproxy_ctld
     [ -f $HAPROXY_PID ]  &&  pid=$( /bin/cat "${HAPROXY_PID}" )
     if `ps -p $pid > /dev/null 2>&1`; then
         /bin/kill $pid
@@ -167,14 +165,6 @@ function status() {
     fi
 }
 
-# Get the application domain from the app dns.
-function get-app-domain() {
-    dnsparts=(${OPENSHIFT_APP_DNS//./ })
-    appdomain=(${dnsparts[0]//-/ })
-    domain=${appdomain[1]}
-    echo $domain
-}
-
 function tidy() {
     client_message "Emptying haproxy logs in dir: $OPENSHIFT_LOG_DIR"
     shopt -s dotglob
@@ -200,8 +190,5 @@ case "$1" in
     reload)         reload              ;;
     force-reload)   force-reload        ;;
     status)         status              ;;
-    disable-server) disable-server "$@" ;;
-    enable-server)  enable-server  "$@" ;;
-    update-cluster) update-cluster "$@" ;;
     tidy)      tidy ;;
 esac
