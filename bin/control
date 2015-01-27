@@ -124,7 +124,7 @@ function _reload_service() {
 }
 
 function start() {
-    _start_haproxy_service
+ #   _start_haproxy_service
     isrunning  &&  echo "HAProxy instance is started"
 }
 
