@@ -1,0 +1,207 @@
+#!/bin/bash -e
+source $OPENSHIFT_CARTRIDGE_SDK_BASH
+
+export STOPTIMEOUT=20
+
+HAPROXY_CART="haproxy-1.4"
+export HAPROXY_PID="${OPENSHIFT_HAPROXY_DIR}/run/haproxy.pid"
+export HAPROXY_CTLD_PID="${OPENSHIFT_HAPROXY_DIR}/run/haproxy_ctld.pid"
+
+if ! [ $# -gt 0 ]
+then
+    echo "Usage: \$0 [start|restart|stop|status|deploy]"
+    exit 1
+fi
+
+function isrunning() {
+    if [ -f "${HAPROXY_PID}" ]; then
+        haproxy_pid=`cat $HAPROXY_PID 2> /dev/null`
+        [ -z "$haproxy_pid" ]  &&  return 1
+        current_user=`id -u`
+        if `ps --pid $haproxy_pid > /dev/null 2>&1` ||     \
+           `pgrep -x haproxy -u $current_user > /dev/null 2>&1`; then
+            return 0
+        fi
+    fi
+    return 1
+}
+
+function wait_to_start() {
+   ep=$(grep "listen stats" $OPENSHIFT_HAPROXY_DIR/conf/haproxy.cfg | sed 's#listen\s*stats\s*\(.*\)#\1#')
+   i=0
+   while ( ! curl "http://$ep/haproxy-status/;csv" &> /dev/null )  && [ $i -lt 10 ]; do
+       sleep 1
+       i=$(($i + 1))
+   done
+
+   if [ $i -ge 10 ]; then
+      echo "`date`: HAProxy status check - max retries ($i) exceeded" 1>&2
+   fi
+}
+
+function _launch_haproxy_bg() {
+    [ -n "$1" ]  &&  zopts="-sf $1"
+    _load_user_configs
+    LOGPIPE=${OPENSHIFT_HOMEDIR}/app-root/runtime/logshifter-haproxy
+    rm -f $LOGPIPE && mkfifo $LOGPIPE
+
+    /usr/bin/logshifter -tag haproxy < $LOGPIPE &
+    nohup /usr/sbin/haproxy -f $OPENSHIFT_HAPROXY_DIR/conf/haproxy.cfg ${zopts} &> $LOGPIPE &
+    echo $! > $HAPROXY_PID
+}
+
+function _load_user_configs() {
+    haproxy_cfg=$OPENSHIFT_HAPROXY_DIR/conf/haproxy.cfg
+    if [ ! -z "${OPENSHIFT_HAPROXY_HTTPCHK_URI}" ]; then
+        (
+        flock 200
+        cp -f "$haproxy_cfg" /tmp/haproxy.cfg.$$
+        sed -i "s/option httpchk GET.*/option httpchk GET $( echo ${OPENSHIFT_HAPROXY_HTTPCHK_URI} | sed -e 's/[\/&]/\\&/g')/g" /tmp/haproxy.cfg.$$
+        cat /tmp/haproxy.cfg.$$ > "$haproxy_cfg"
+        rm -f /tmp/haproxy.cfg.$$
+        ) 200>${haproxy_cfg}.lock
+    fi
+    if [ ! -z "${OPENSHIFT_HAPROXY_HTTPCHK_EXPECT_RSTATUS}" ]; then
+        (
+        flock 200
+        cp -f "$haproxy_cfg" /tmp/haproxy.cfg.$$
+        sed -i "s/http-check expect rstatus.*/http-check expect rstatus $( echo ${OPENSHIFT_HAPROXY_HTTPCHK_EXPECT_RSTATUS} | sed -e 's/[\/&]/\\&/g')/g" /tmp/haproxy.cfg.$$
+        cat /tmp/haproxy.cfg.$$ > "$haproxy_cfg"
+        rm -f /tmp/haproxy.cfg.$$
+        ) 200>${haproxy_cfg}.lock
+    fi
+}
+
+function _start_haproxy_service() {
+    if ! isrunning
+    then
+        _launch_haproxy_bg
+        wait_to_start
+    else
+        echo "HAProxy already running"
+    fi
+}
+
+function _stop_haproxy_service() {
+    _stop_haproxy_ctld
+    [ -f $HAPROXY_PID ]  &&  pid=$( /bin/cat "${HAPROXY_PID}" )
+    if `ps -p $pid > /dev/null 2>&1`; then
+        /bin/kill $pid
+        ret=$?
+        if [ $ret -eq 0 ]; then
+            TIMEOUT="$STOPTIMEOUT"
+            while [ $TIMEOUT -gt 0 ] && [ -f "$HAPROXY_PID" ]; do
+                /bin/kill -0 "$pid" >/dev/null 2>&1 || break
+                sleep .5
+                let TIMEOUT=${TIMEOUT}-1
+            done
+        fi
+    else
+        if `pgrep -x haproxy > /dev/null 2>&1`
+        then
+            echo "Warning: HAProxy process exists without a pid file.  Use force-stop to kill." 1>&2
+        else
+            echo "HAProxy already stopped" 1>&2
+        fi
+    fi
+}
+
+function _restart_haproxy_service() {
+    _stop_haproxy_service || pkill haproxy || :
+    _start_haproxy_service
+}
+
+function _reload_service() {
+    exec 200>/tmp/haproxy_reload.lock
+    flock 200
+    [ -f $HAPROXY_PID ]  &&  zpid=$( /bin/cat "${HAPROXY_PID}" )
+    i=0
+    while (! _launch_haproxy_bg "$zpid" )  && [ $i -lt 60 ]; do
+        sleep 2
+        i=$(($i + 1))
+        echo "`date`: Retrying HAProxy service reload - attempt #$((i+1)) ... "
+    done
+    flock -u 200
+    wait_to_start
+}
+
+function start() {
+    _start_haproxy_service
+    isrunning  &&  echo "HAProxy instance is started"
+}
+
+function stop() {
+    _stop_haproxy_service
+    isrunning  ||  echo "HAProxy instance is stopped"
+}
+
+function restart() {
+    _restart_haproxy_service
+    isrunning  &&  echo "Restarted HAProxy instance"
+}
+
+function reload() {
+    if ! isrunning; then
+       _start_haproxy_service
+    else
+       echo "`date`: Reloading HAProxy service " 1>&2
+       _reload_service
+    fi
+
+    isrunning  &&  echo "Reloaded HAProxy instance"
+}
+
+function force-reload() {
+    if isrunning; then
+        echo "`date`: Conditionally reloading HAProxy service " 1>&2
+        _reload_service
+        isrunning  &&  echo "Conditionally reloaded HAProxy"
+    fi
+}
+
+function status() {
+    if isrunning; then
+        client_result "HAProxy instance is running"
+    else
+        client_result "HAProxy instance is stopped"
+    fi
+}
+
+# Get the application domain from the app dns.
+function get-app-domain() {
+    dnsparts=(${OPENSHIFT_APP_DNS//./ })
+    appdomain=(${dnsparts[0]//-/ })
+    domain=${appdomain[1]}
+    echo $domain
+}
+
+function tidy() {
+    client_message "Emptying haproxy logs in dir: $OPENSHIFT_LOG_DIR"
+    shopt -s dotglob
+    rm -rf $OPENSHIFT_LOG_DIR/haproxy.log*
+    rm -rf $OPENSHIFT_LOG_DIR/haproxy_ctld.log*
+}
+
+#
+# main():
+#
+
+
+if ! [ -f ${OPENSHIFT_HAPROXY_DIR}/conf/haproxy.cfg ]; then
+  client_error "HAProxy required configuration file \"$(basename $f)\" not found."
+  exit 129
+fi
+
+# And then on the haproxy and haproxy_ctld.
+case "$1" in
+    start)          start               ;;
+    stop)           stop                ;;
+    restart)        restart             ;;
+    reload)         reload              ;;
+    force-reload)   force-reload        ;;
+    status)         status              ;;
+    disable-server) disable-server "$@" ;;
+    enable-server)  enable-server  "$@" ;;
+    update-cluster) update-cluster "$@" ;;
+    tidy)      tidy ;;
+esac
