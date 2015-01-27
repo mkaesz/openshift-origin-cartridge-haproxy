@@ -45,8 +45,6 @@ Endpoints:
   - Frontend: ''
     Backend: ''
     Options:
-      target_update: true
-      connections: -1
       websocket: true
   - Frontend: /health
     Backend: configuration/health
