@@ -5,10 +5,10 @@ case "$1" in
     version="$2"
 esac
 
-echo "$version" > "$OPENSHIFT_HAPROXY_DIR/env/OPENSHIFT_HAPROXY_VERSION"
+echo "$version" > "$OPENSHIFT_KDEHAPROXY_DIR/env/OPENSHIFT_HAPROXY_VERSION"
 
-mkdir -p $OPENSHIFT_HAPROXY_DIR/{conf,run,sessions}
+mkdir -p $OPENSHIFT_KDEHAPROXY_DIR/{conf,run,sessions}
 
-if [ ! -f "$OPENSHIFT_HAPROXY_DIR/conf/haproxy.cfg" ]; then
-    cp ${OPENSHIFT_HAPROXY_DIR}/versions/$version/configuration/haproxy.cfg.erb $OPENSHIFT_HAPROXY_DIR/conf/
+if [ ! -f "$OPENSHIFT_KDEHAPROXY_DIR/conf/haproxy.cfg" ]; then
+    cp ${OPENSHIFT_KDEHAPROXY_DIR}/versions/$version/configuration/haproxy.cfg.erb $OPENSHIFT_KDEHAPROXY_DIR/conf/
 fi
