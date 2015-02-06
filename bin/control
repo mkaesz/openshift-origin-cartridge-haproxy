@@ -15,7 +15,7 @@ start() {
   fi
  
   echo -n "Starting HAproxy: "
-  /usr/sbin/haproxy -D -f ${OPENSHIFT_KDEHAPROXY_DIR}haproxy.cfg -p ${OPENSHIFT_KDEHAPROXY_DIR}run/haproxy.pid
+  /usr/sbin/haproxy -D -f ${OPENSHIFT_KDEHAPROXY_DIR}conf/haproxy.cfg -p ${OPENSHIFT_KDEHAPROXY_DIR}run/haproxy.pid
   RETVAL=$?
   echo
   [ $RETVAL -eq 0 ] && touch ${OPENSHIFT_KDEHAPROXY_DIR}haproxy
@@ -33,7 +33,7 @@ stop() {
 }
  
 restart() {
-  /usr/sbin/haproxy -c -q -f ${OPENSHIFT_KDEHAPROXY_DIR}haproxy.cfg
+  /usr/sbin/haproxy -c -q -f ${OPENSHIFT_KDEHAPROXY_DIR}conf/haproxy.cfg
   if [ $? -ne 0 ]; then
     echo "Errors found in configuration file, check it with 'haproxy check'."
     return 1
@@ -43,7 +43,7 @@ restart() {
 }
  
 check() {
-  /usr/sbin/haproxy -c -q -V -f ${OPENSHIFT_KDEHAPROXY_DIR}haproxy.cfg
+  /usr/sbin/haproxy -c -q -V -f ${OPENSHIFT_KDEHAPROXY_DIR}conf/haproxy.cfg
 }
  
 rhstatus() {
