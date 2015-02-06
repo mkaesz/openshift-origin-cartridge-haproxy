@@ -1,0 +1,92 @@
+#!/bin/bash -e
+source $OPENSHIFT_CARTRIDGE_SDK_BASH
+
+# Source function library.
+if [ -f /etc/init.d/functions ]; then
+  . /etc/init.d/functions
+elif [ -f /etc/rc.d/init.d/functions ] ; then
+  . /etc/rc.d/init.d/functions
+else
+  exit 0
+fi
+ 
+[ -f ${OPENSSHIFT_KDEHAPROXY_DIR}haproxy.cfg ] || exit 1
+ 
+RETVAL=0
+ 
+start() {
+  /usr/bin/haproxy -c -q -f ${OPENSSHIFT_KDEHAPROXY_DIR}var/lock/subsys/haproxy.cfg
+  if [ $? -ne 0 ]; then
+    echo "Errors found in configuration file."
+    return 1
+  fi
+ 
+  echo -n "Starting HAproxy: "
+  daemon /usr/bin/haproxy -D -f ${OPENSSHIFT_KDEHAPROXY_DIR}haproxy.cfg -p ${OPENSSHIFT_KDEHAPROXY_DIR}var/run/haproxy.pid
+  RETVAL=$?
+  echo
+  [ $RETVAL -eq 0 ] && touch ${OPENSSHIFT_KDEHAPROXY_DIR}haproxy
+  return $RETVAL
+}
+ 
+stop() {
+  echo -n "Shutting down HAproxy: "
+  killproc haproxy -USR1
+  RETVAL=$?
+  echo
+  [ $RETVAL -eq 0 ] && rm -f ${OPENSSHIFT_KDEHAPROXY_DIR}haproxy
+  [ $RETVAL -eq 0 ] && rm -f ${OPENSSHIFT_KDEHAPROXY_DIR}var/run/haproxy.pid
+  return $RETVAL
+}
+ 
+restart() {
+  /usr/bin/haproxy -c -q -f ${OPENSSHIFT_KDEHAPROXY_DIR}haproxy.cfg
+  if [ $? -ne 0 ]; then
+    echo "Errors found in configuration file, check it with 'haproxy check'."
+    return 1
+  fi
+  stop
+  start
+}
+ 
+check() {
+  /usr/bin/haproxy -c -q -V -f ${OPENSSHIFT_KDEHAPROXY_DIR}haproxy.cfg
+}
+ 
+rhstatus() {
+  status haproxy
+}
+ 
+condrestart() {
+  [ -e ${OPENSSHIFT_KDEHAPROXY_DIR}var/lock/subsys/haproxy ] && restart || :
+}
+ 
+# See how we were called.
+case "$1" in
+  start)
+    start
+    ;;
+  stop)
+    stop
+    ;;
+  restart)
+    restart
+    ;;
+  reload)
+    restart
+    ;;
+  condrestart)
+    condrestart
+    ;;
+  status)
+    rhstatus
+    ;;
+  check)
+    check
+    ;;
+  *)
+    echo $"Usage: haproxy {start|stop|restart|reload|condrestart|status|check}"
+    RETVAL=1
+esac
+ 
+exit $RETVAL

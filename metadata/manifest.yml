@@ -1,0 +1,64 @@
+---
+Name: kdehaproxy
+Cartridge-Short-Name: KDEHAPROXY
+Display-Name: Web Load Balancer
+Description: HAProxy is a free, very fast and reliable solution offering high 
+        availability, load balancing, and proxying for TCP and HTTP-based applications.
+Version: '1.4'
+License: GPLv2+
+License-Url: http://www.gnu.org/licenses/gpl-2.0.html
+Vendor: http://haproxy.1wt.eu/
+Cartridge-Version: 0.0.1
+Cartridge-Vendor: msk
+Categories:
+- web_framework
+- service
+Website: http://haproxy.1wt.eu/
+Provides:
+- haproxy-1.4
+- haproxy
+Components:
+  web_proxy:
+    Publishes:
+      get-balancer-connection-info:
+        Type: NET_TCP:http:http
+      publish-haproxy-status-url:
+        Type: NET_TCP:haproxy-status-info
+    Subscribes:
+    Scaling:
+      Min: 1
+      Max: 1
+Configure-Order:
+- web_framework
+Group-Overrides:
+- components:
+  - web_framework
+Endpoints:
+- Private-IP-Name: IP
+  Private-Port-Name: PORT
+  Private-Port: 8080
+  Public-Port-Name: PROXY_PORT
+  Protocols:
+  - http
+  - ws
+  Mappings:
+  - Frontend: ''
+    Backend: ''
+    Options:
+      websocket: true
+  - Frontend: /health
+    Backend: configuration/health
+    Options:
+      file: true
+- Private-IP-Name: STATUS_IP
+  Private-Port-Name: STATUS_PORT
+  Private-Port: 8080
+  Protocols:
+  - http
+  Mappings:
+  - Frontend: /haproxy-status
+    Backend: /
+  - Frontend: /health
+    Backend: ''
+    Options:
+      health: true
