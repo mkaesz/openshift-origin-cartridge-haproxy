@@ -13,7 +13,7 @@ start() {
   fi
  
   echo -n "Starting HAproxy: "
-  daemon /usr/sbin/haproxy -D -f ${OPENSHIFT_KDEHAPROXY_DIR}haproxy.cfg -p ${OPENSHIFT_KDEHAPROXY_DIR}var/run/haproxy.pid
+  daemon /usr/sbin/haproxy -D -f ${OPENSHIFT_KDEHAPROXY_DIR}haproxy.cfg -p ${OPENSHIFT_KDEHAPROXY_DIR}run/haproxy.pid
   RETVAL=$?
   echo
   [ $RETVAL -eq 0 ] && touch ${OPENSHIFT_KDEHAPROXY_DIR}haproxy
@@ -26,7 +26,7 @@ stop() {
   RETVAL=$?
   echo
   [ $RETVAL -eq 0 ] && rm -f ${OPENSHIFT_KDEHAPROXY_DIR}haproxy
-  [ $RETVAL -eq 0 ] && rm -f ${OPENSHIFT_KDEHAPROXY_DIR}var/run/haproxy.pid
+  [ $RETVAL -eq 0 ] && rm -f ${OPENSHIFT_KDEHAPROXY_DIR}run/haproxy.pid
   return $RETVAL
 }
  
