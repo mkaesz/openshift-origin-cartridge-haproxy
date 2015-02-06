@@ -24,7 +24,7 @@ start() {
  
 stop() {
   echo -n "Shutting down HAproxy: "
-  killproc haproxy -USR1
+  kill -9 `cat ${OPENSHIFT_KDEHAPROXY_DIR}run/haproxy.pid`
   RETVAL=$?
   echo
   [ $RETVAL -eq 0 ] && rm -f ${OPENSHIFT_KDEHAPROXY_DIR}haproxy
