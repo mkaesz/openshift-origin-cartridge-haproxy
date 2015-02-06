@@ -1,31 +1,22 @@
 #!/bin/bash -e
 source $OPENSHIFT_CARTRIDGE_SDK_BASH
 
-# Source function library.
-if [ -f /etc/init.d/functions ]; then
-  . /etc/init.d/functions
-elif [ -f /etc/rc.d/init.d/functions ] ; then
-  . /etc/rc.d/init.d/functions
-else
-  exit 0
-fi
- 
-[ -f ${OPENSSHIFT_KDEHAPROXY_DIR}haproxy.cfg ] || exit 1
+[ -f ${OPENSHIFT_KDEHAPROXY_DIR}haproxy.cfg ] || exit 1
  
 RETVAL=0
  
 start() {
-  /usr/bin/haproxy -c -q -f ${OPENSSHIFT_KDEHAPROXY_DIR}var/lock/subsys/haproxy.cfg
+  /usr/sbin/haproxy -c -q -f ${OPENSHIFT_KDEHAPROXY_DIR}conf/haproxy.cfg
   if [ $? -ne 0 ]; then
     echo "Errors found in configuration file."
     return 1
   fi
  
   echo -n "Starting HAproxy: "
-  daemon /usr/bin/haproxy -D -f ${OPENSSHIFT_KDEHAPROXY_DIR}haproxy.cfg -p ${OPENSSHIFT_KDEHAPROXY_DIR}var/run/haproxy.pid
+  daemon /usr/sbin/haproxy -D -f ${OPENSHIFT_KDEHAPROXY_DIR}haproxy.cfg -p ${OPENSHIFT_KDEHAPROXY_DIR}var/run/haproxy.pid
   RETVAL=$?
   echo
-  [ $RETVAL -eq 0 ] && touch ${OPENSSHIFT_KDEHAPROXY_DIR}haproxy
+  [ $RETVAL -eq 0 ] && touch ${OPENSHIFT_KDEHAPROXY_DIR}haproxy
   return $RETVAL
 }
  
@@ -34,13 +25,13 @@ stop() {
   killproc haproxy -USR1
   RETVAL=$?
   echo
-  [ $RETVAL -eq 0 ] && rm -f ${OPENSSHIFT_KDEHAPROXY_DIR}haproxy
-  [ $RETVAL -eq 0 ] && rm -f ${OPENSSHIFT_KDEHAPROXY_DIR}var/run/haproxy.pid
+  [ $RETVAL -eq 0 ] && rm -f ${OPENSHIFT_KDEHAPROXY_DIR}haproxy
+  [ $RETVAL -eq 0 ] && rm -f ${OPENSHIFT_KDEHAPROXY_DIR}var/run/haproxy.pid
   return $RETVAL
 }
  
 restart() {
-  /usr/bin/haproxy -c -q -f ${OPENSSHIFT_KDEHAPROXY_DIR}haproxy.cfg
+  /usr/sbin/haproxy -c -q -f ${OPENSHIFT_KDEHAPROXY_DIR}haproxy.cfg
   if [ $? -ne 0 ]; then
     echo "Errors found in configuration file, check it with 'haproxy check'."
     return 1
@@ -50,7 +41,7 @@ restart() {
 }
  
 check() {
-  /usr/bin/haproxy -c -q -V -f ${OPENSSHIFT_KDEHAPROXY_DIR}haproxy.cfg
+  /usr/sbin/haproxy -c -q -V -f ${OPENSHIFT_KDEHAPROXY_DIR}haproxy.cfg
 }
  
 rhstatus() {
@@ -58,7 +49,7 @@ rhstatus() {
 }
  
 condrestart() {
-  [ -e ${OPENSSHIFT_KDEHAPROXY_DIR}var/lock/subsys/haproxy ] && restart || :
+  [ -e ${OPENSHIFT_KDEHAPROXY_DIR}var/lock/subsys/haproxy ] && restart || :
 }
  
 # See how we were called.
