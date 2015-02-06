@@ -53,6 +53,31 @@ rhstatus() {
 condrestart() {
   [ -e ${OPENSHIFT_KDEHAPROXY_DIR}var/lock/subsys/haproxy ] && restart || :
 }
+
+deploy() {
+        echo "Deploying..."
+}
+
+pre-repo-archive() {
+        echo
+}
+
+update-configuration() {
+ #       cp ${OPENSHIFT_REPO_DIR}conf/* ${OPENSHIFT_SQUID_DIR}configuration/
+	echo
+}
+
+pre-build() {
+        echo
+}
+
+build() {
+        echo
+}
+
+post-deploy(){
+	echo
+}
  
 # See how we were called.
 case "$1" in
@@ -76,6 +101,24 @@ case "$1" in
     ;;
   check)
     check
+    ;;
+  deploy)
+    deploy
+    ;;
+  pre-repo-archive)
+    pre-repo-archive
+    ;;
+  update-configuration)
+    update-configuration
+    ;;
+  pre-build)
+    pre-build
+    ;;
+  build)
+    build
+    ;;
+  post-deploy)
+    post-deploy
     ;;
   *)
     echo $"Usage: haproxy {start|stop|restart|reload|condrestart|status|check}"
