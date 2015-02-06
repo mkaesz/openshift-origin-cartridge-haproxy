@@ -28,7 +28,7 @@ global
     maxconn     256
 
     # turn on stats unix socket
-    stats socket <%= ENV['OPENSHIFT_HAPROXY_DIR'] %>/run/stats level admin
+    stats socket <%= ENV['OPENSHIFT_KDEHAPROXY_DIR'] %>run/stats level admin
 
 #---------------------------------------------------------------------
 # common defaults that all the 'listen' and 'backend' sections will

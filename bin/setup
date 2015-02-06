@@ -7,7 +7,7 @@ esac
 
 echo "$version" > "$OPENSHIFT_KDEHAPROXY_DIR/env/OPENSHIFT_HAPROXY_VERSION"
 
-mkdir -p $OPENSHIFT_KDEHAPROXY_DIR/{conf,run,sessions}
+mkdir -p $OPENSHIFT_KDEHAPROXY_DIR/{conf,run,sessions,var/lock/subsys}
 
 if [ ! -f "$OPENSHIFT_KDEHAPROXY_DIR/conf/haproxy.cfg" ]; then
     cp ${OPENSHIFT_KDEHAPROXY_DIR}/versions/$version/configuration/haproxy.cfg.erb $OPENSHIFT_KDEHAPROXY_DIR/conf/
