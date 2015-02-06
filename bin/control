@@ -1,7 +1,9 @@
 #!/bin/bash -e
+
+set -x
 source $OPENSHIFT_CARTRIDGE_SDK_BASH
 
-[ -f ${OPENSHIFT_KDEHAPROXY_DIR}haproxy.cfg ] || exit 1
+[ -f ${OPENSHIFT_KDEHAPROXY_DIR}conf/haproxy.cfg ] || exit 1
  
 RETVAL=0
  
