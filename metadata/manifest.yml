@@ -1,7 +1,7 @@
 ---
 Name: kdehaproxy
 Cartridge-Short-Name: KDEHAPROXY
-Display-Name: HA Proxy
+Display-Name: HAProxy
 Description: HAProxy is a free, very fast and reliable solution offering high 
         availability, load balancing, and proxying for TCP and HTTP-based applications.
 Version: '1.4'
