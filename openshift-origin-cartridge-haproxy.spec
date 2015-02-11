@@ -1,6 +1,6 @@
 %global cartridgedir %{_libexecdir}/openshift/cartridges/kdehaproxy
 
-Name: 		openshift-origin-cartridge-haproxy
+Name: 		openshift-origin-cartridge-kdehaproxy
 Version:	1.4
 Release:	1%{?dist}
 Summary:	HAProxy is a free, very fast and reliable solution offering high availability, load balancing, and proxying for TCP and HTTP-based applications.

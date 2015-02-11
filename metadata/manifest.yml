@@ -1,7 +1,7 @@
 ---
 Name: kdehaproxy
 Cartridge-Short-Name: KDEHAPROXY
-Display-Name: Web Load Balancer
+Display-Name: HA Proxy
 Description: HAProxy is a free, very fast and reliable solution offering high 
         availability, load balancing, and proxying for TCP and HTTP-based applications.
 Version: '1.4'
@@ -9,14 +9,14 @@ License: GPLv2+
 License-Url: http://www.gnu.org/licenses/gpl-2.0.html
 Vendor: http://haproxy.1wt.eu/
 Cartridge-Version: 0.0.1
-Cartridge-Vendor: msk
+Cartridge-Vendor: kde
 Categories:
 - web_framework
 - service
 Website: http://haproxy.1wt.eu/
 Provides:
-- haproxy-1.4
-- haproxy
+- kdehaproxy-1.4
+- kdehaproxy
 Components:
   web_proxy:
     Publishes:
