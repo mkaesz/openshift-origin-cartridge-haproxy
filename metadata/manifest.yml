@@ -12,27 +12,10 @@ Cartridge-Version: 0.0.1
 Cartridge-Vendor: kde
 Categories:
 - web_framework
-- service
 Website: http://haproxy.1wt.eu/
 Provides:
 - kdehaproxy-1.4
 - kdehaproxy
-Components:
-  web_proxy:
-    Publishes:
-      get-balancer-connection-info:
-        Type: NET_TCP:http:http
-      publish-haproxy-status-url:
-        Type: NET_TCP:haproxy-status-info
-    Subscribes:
-    Scaling:
-      Min: 1
-      Max: 1
-Configure-Order:
-- web_framework
-Group-Overrides:
-- components:
-  - web_framework
 Endpoints:
 - Private-IP-Name: IP
   Private-Port-Name: PORT
